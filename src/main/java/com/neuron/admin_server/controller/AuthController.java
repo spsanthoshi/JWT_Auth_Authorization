@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.neuron.admin_server.config.UserInfoUserDetails;
 import com.neuron.admin_server.domain.User;
 import com.neuron.admin_server.domain.User_Role_Mapping;
-import com.neuron.admin_server.dto.LoginReponse;
+import com.neuron.admin_server.dto.Reponse;
 import com.neuron.admin_server.helper.JwtHelper;
 import com.neuron.admin_server.service.LoginService;
 import com.neuron.admin_server.service.UserBusinessService;
@@ -59,7 +59,7 @@ public class AuthController {
 
 
   @PostMapping(value = "/login")
-  public ResponseEntity<LoginReponse> login(@RequestBody User request) {
+  public ResponseEntity<Reponse> login(@RequestBody User request) {
     try {
       authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -75,12 +75,14 @@ public class AuthController {
       String roles = String.join(",", existingUser.getRoleNameList());
       String token = JwtHelper.generateToken(request.getEmail(),roles);
       loginService.addLoginAttempt(request, true);
-      return new ResponseEntity<LoginReponse>(new LoginReponse(existingUser, token), HttpStatus.OK);
+      List<User> resultList = new ArrayList();
+      resultList.add(existingUser);
+      return new ResponseEntity<Reponse>(new Reponse(resultList, token,1), HttpStatus.OK);
 
       
     } catch (BadCredentialsException e) {
       loginService.addLoginAttempt(request, false);
-      throw e;
+      return new ResponseEntity<Reponse>(new Reponse(e.getMessage(), 0), HttpStatus.OK);
     }
 
 
